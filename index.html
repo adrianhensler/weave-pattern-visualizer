@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rigid Heddle Weaving Pattern Visualizer - Proof of Concept</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 0;
+            min-height: 600px;
+        }
+
+        .sidebar {
+            background: #f8f9fa;
+            padding: 30px;
+            border-right: 1px solid #dee2e6;
+            overflow-y: auto;
+        }
+
+        .main {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .section h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+        }
+
+        .validation-results {
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .validation-results.valid {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .validation-results.invalid {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .validation-results h4 {
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .validation-results ul {
+            margin-left: 20px;
+        }
+
+        .validation-results li {
+            margin-bottom: 5px;
+        }
+
+        .pattern-info {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .info-value {
+            color: #6c757d;
+        }
+
+        .canvas-container {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        canvas {
+            border: 1px solid #adb5bd;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            cursor: crosshair;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .zoom-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .zoom-control span {
+            color: #495057;
+            font-weight: 600;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 24px;
+            height: 24px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+        }
+
+        .tooltip {
+            position: fixed;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            pointer-events: none;
+            display: none;
+            z-index: 1000;
+        }
+
+        /* Tab Navigation */
+        .tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 2px solid #dee2e6;
+            margin-bottom: 20px;
+        }
+
+        .tab-button {
+            flex: 1;
+            background: transparent;
+            color: #6c757d;
+            border: none;
+            padding: 12px 10px;
+            border-radius: 0;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-button:hover {
+            transform: none;
+            box-shadow: none;
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .tab-button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .tab-content {
+            display: block;
+        }
+
+        .tab-content.hidden {
+            display: none;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-input.input-valid {
+            border-color: #28a745;
+        }
+
+        .form-input.input-error {
+            border-color: #dc3545;
+        }
+
+        .form-input-inline {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            padding: 4px 8px;
+            font-weight: 600;
+            font-size: 1.1em;
+            transition: border-color 0.2s;
+        }
+
+        .form-input-inline:hover {
+            border-bottom-color: #dee2e6;
+        }
+
+        .form-input-inline:focus {
+            outline: none;
+            border-bottom-color: #667eea;
+            box-shadow: none;
+        }
+
+        /* Helper and Error Messages */
+        .helper-text {
+            font-size: 0.85em;
+            color: #6c757d;
+            margin-top: 6px;
+        }
+
+        .error-message {
+            font-size: 0.85em;
+            color: #dc3545;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .success-message {
+            font-size: 0.85em;
+            color: #28a745;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Color Picker */
+        .color-picker-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .color-picker-group input[type="color"] {
+            width: 50px;
+            height: 40px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            cursor: pointer;
+            padding: 2px;
+        }
+
+        .color-picker-group input[type="text"] {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 0.95em;
+        }
+
+        .color-picker-group input[type="number"] {
+            width: 80px;
+            padding: 8px 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 0.95em;
+        }
+
+        /* Section Cards */
+        .section-card {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+
+        .section-card:hover {
+            border-color: #667eea;
+        }
+
+        .section-card-header {
+            background: #f8f9fa;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .section-card-header input.section-name {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            font-weight: 600;
+            font-size: 1.05em;
+            padding: 4px 8px;
+            transition: border-color 0.2s;
+            flex: 1;
+        }
+
+        .section-card-header input.section-name:hover {
+            border-bottom-color: #dee2e6;
+        }
+
+        .section-card-header input.section-name:focus {
+            outline: none;
+            border-bottom-color: #667eea;
+        }
+
+        .section-technique {
+            color: #6c757d;
+            font-size: 0.9em;
+            padding: 4px 12px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+
+        .section-card-body {
+            padding: 15px;
+        }
+
+        .total-length {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #495057;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #dee2e6;
+            text-align: center;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .quick-actions button {
+            flex: 1;
+            padding: 10px;
+            font-size: 0.9em;
+        }
+
+        /* Pattern Type Radio */
+        .pattern-type-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .pattern-type-option {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .pattern-type-option input[type="radio"] {
+            cursor: pointer;
+        }
+
+        /* Warp Preview Bar */
+        .warp-preview {
+            height: 40px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            margin-top: 15px;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .warp-preview-thread {
+            flex: 1;
+            min-width: 2px;
+        }
+
+        /* Header Actions */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-content {
+            flex: 1;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .header-actions button {
+            padding: 8px 16px;
+            font-size: 0.9em;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .header-actions button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: none;
+        }
+
+        @media (max-width: 1024px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .header-actions {
+                width: 100%;
+            }
+
+            .header-actions button {
+                flex: 1;
+            }
+
+            .tabs {
+                flex-wrap: wrap;
+            }
+
+            .tab-button {
+                flex: 1 1 45%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1>🧵 Rigid Heddle Pattern Visualizer</h1>
+                <p class="subtitle">Design, Edit & Preview Your Weaving Projects</p>
+            </div>
+            <div class="header-actions">
+                <button onclick="loadPattern()">Load</button>
+                <button onclick="savePattern()">Save</button>
+                <button onclick="exportJSON()">Export</button>
+            </div>
+        </header>
+
+        <div class="content">
+            <aside class="sidebar">
+                <!-- Tab Navigation -->
+                <div class="tabs">
+                    <button class="tab-button active" onclick="switchTab(event, 'overview')">Overview</button>
+                    <button class="tab-button" onclick="switchTab(event, 'setup')">Setup</button>
+                    <button class="tab-button" onclick="switchTab(event, 'colors')">Colors</button>
+                    <button class="tab-button" onclick="switchTab(event, 'edit')">Edit</button>
+                </div>
+
+                <!-- Tab 1: Overview -->
+                <div class="tab-content" id="tab-overview">
+                    <div class="form-group">
+                        <label class="form-label">Pattern Name</label>
+                        <input type="text" id="patternName" class="form-input-inline" value="Navy & White Scarf"
+                               onchange="updatePatternName(this.value)" style="width: 100%;">
+                    </div>
+
+                    <div class="section">
+                        <h3>Quick Facts</h3>
+                        <div class="pattern-info">
+                            <div class="info-row">
+                                <span class="info-label">Fabric Size:</span>
+                                <span class="info-value" id="infoSize">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Loom:</span>
+                                <span class="info-value" id="infoLoom">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Warp Threads:</span>
+                                <span class="info-value" id="infoEnds">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Weft Rows:</span>
+                                <span class="info-value" id="infoRows">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>Validation</h3>
+                        <div class="validation-results" id="validationResults">
+                            <p>Make changes to see validation results.</p>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>Color Legend</h3>
+                        <div class="legend" id="colorLegend"></div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Setup -->
+                <div class="tab-content hidden" id="tab-setup">
+                    <div class="section">
+                        <h3>My Loom</h3>
+                        <div class="form-group">
+                            <label class="form-label">Loom Width (inches)</label>
+                            <select id="loomWidth" class="form-select" onchange="updateLoomWidth(this.value)">
+                                <option value="10">10"</option>
+                                <option value="15">15"</option>
+                                <option value="16" selected>16"</option>
+                                <option value="20">20"</option>
+                                <option value="24">24"</option>
+                                <option value="32">32"</option>
+                                <option value="40">40"</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Heddle Dent (threads per inch)</label>
+                            <select id="heddleDent" class="form-select" onchange="updateHeddleDent(this.value)">
+                                <option value="5">5 dent</option>
+                                <option value="7.5">7.5 dent</option>
+                                <option value="8" selected>8 dent</option>
+                                <option value="10">10 dent</option>
+                                <option value="12">12 dent</option>
+                                <option value="12.5">12.5 dent</option>
+                                <option value="15">15 dent</option>
+                            </select>
+                            <div class="helper-text">This determines how many warp threads per inch (EPI)</div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>Project Design</h3>
+                        <div class="form-group">
+                            <label class="form-label">Fabric Width (inches)</label>
+                            <input type="number" id="fabricWidth" class="form-input" value="12" min="1" max="40" step="0.5"
+                                   onchange="updateFabricWidth(this.value)">
+                            <div id="widthFeedback" class="helper-text"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Fabric Length (inches)</label>
+                            <input type="number" id="fabricLength" class="form-input" value="70" min="6" step="1"
+                                   onchange="updateFabricLength(this.value)">
+                        </div>
+
+                        <div class="pattern-info">
+                            <div class="info-row">
+                                <span class="info-label">Calculated Warp Threads:</span>
+                                <span class="info-value" id="calcWarpEnds">96</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">At EPI:</span>
+                                <span class="info-value" id="calcEPI">8</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>Finishing</h3>
+                        <div class="form-group">
+                            <label class="form-label">Method</label>
+                            <select id="finishingMethod" class="form-select" onchange="updateFinishingMethod(this.value)">
+                                <option value="hemstitch" selected>Hemstitch</option>
+                                <option value="twisted_fringe">Twisted Fringe</option>
+                                <option value="sewn_hem">Sewn Hem</option>
+                                <option value="knotted_fringe">Knotted Fringe</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Fringe Length (inches)</label>
+                            <input type="number" id="fringeLength" class="form-input" value="4" min="0" max="12" step="0.5"
+                                   onchange="updateFringeLength(this.value)">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Colors -->
+                <div class="tab-content hidden" id="tab-colors">
+                    <div class="section">
+                        <h3>Warp Colors</h3>
+
+                        <div class="pattern-type-group">
+                            <label class="pattern-type-option">
+                                <input type="radio" name="warpPattern" value="alternating" checked onchange="updateWarpPatternType(this.value)">
+                                Alternating
+                            </label>
+                            <label class="pattern-type-option">
+                                <input type="radio" name="warpPattern" value="solid" onchange="updateWarpPatternType(this.value)">
+                                Solid
+                            </label>
+                        </div>
+
+                        <div id="warpColorControls">
+                            <div class="color-picker-group">
+                                <input type="color" id="warpColor0" value="#001f3f" onchange="updateWarpColor(0, this.value)">
+                                <input type="text" id="warpColorName0" class="form-input" value="Navy" placeholder="Color name"
+                                       onchange="updateWarpColorName(0, this.value)">
+                                <input type="number" id="warpThreads0" class="form-input" value="1" min="1" max="10"
+                                       onchange="updateWarpThreads(0, this.value)">
+                                <span style="font-size: 0.85em; color: #6c757d;">thread(s)</span>
+                            </div>
+
+                            <div class="color-picker-group">
+                                <input type="color" id="warpColor1" value="#f5f5f5" onchange="updateWarpColor(1, this.value)">
+                                <input type="text" id="warpColorName1" class="form-input" value="White" placeholder="Color name"
+                                       onchange="updateWarpColorName(1, this.value)">
+                                <input type="number" id="warpThreads1" class="form-input" value="1" min="1" max="10"
+                                       onchange="updateWarpThreads(1, this.value)">
+                                <span style="font-size: 0.85em; color: #6c757d;">thread(s)</span>
+                            </div>
+                        </div>
+
+                        <div class="warp-preview" id="warpPreview"></div>
+                        <div class="helper-text" id="warpPreviewText">96 threads total</div>
+                    </div>
+
+                    <div class="section">
+                        <h3>Weft Colors</h3>
+
+                        <div class="form-group">
+                            <label class="form-label">Primary Weft Color</label>
+                            <div class="color-picker-group">
+                                <input type="color" id="weftColor" value="#7f8c8d" onchange="updateWeftColor(this.value)">
+                                <input type="text" id="weftColorName" class="form-input" value="Grey" placeholder="Color name"
+                                       onchange="updateWeftColorName(this.value)">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Yarn Weight</label>
+                            <select id="yarnWeight" class="form-select" onchange="updateYarnWeight(this.value)">
+                                <option value="lace">Lace</option>
+                                <option value="fingering">Fingering</option>
+                                <option value="sport">Sport</option>
+                                <option value="dk">DK</option>
+                                <option value="worsted" selected>Worsted</option>
+                                <option value="aran">Aran</option>
+                                <option value="bulky">Bulky</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Rows per Inch (PPI)</label>
+                            <input type="number" id="ppi" class="form-input" value="10" min="4" max="20" step="1"
+                                   onchange="updatePPI(this.value)">
+                            <div class="helper-text">Typically 8-12 for most yarns</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 4: Edit -->
+                <div class="tab-content hidden" id="tab-edit">
+                    <div class="section">
+                        <h3>Weaving Sections</h3>
+                        <div id="sectionsList"></div>
+
+                        <div class="total-length">
+                            Total: <strong id="totalLength">70</strong> inches
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="main">
+                <div class="canvas-container">
+                    <canvas id="weavingCanvas" width="800" height="600"></canvas>
+
+                    <div class="controls">
+                        <button onclick="validatePattern()">Validate Pattern</button>
+                        <button onclick="renderPattern()">Render Pattern</button>
+
+                        <div class="zoom-control">
+                            <button onclick="zoom(0.8)">-</button>
+                            <span id="zoomLevel">100%</span>
+                            <button onclick="zoom(1.25)">+</button>
+                        </div>
+
+                        <button onclick="resetView()">Reset View</button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        // Sample Pattern Data
+        const samplePattern = {
+            "metadata": {
+                "name": "Navy & White Scarf",
+                "author": "AI Generated",
+                "created": "2026-01-04",
+                "description": "Color-and-weave scarf with pick-up section"
+            },
+            "loom_specs": {
+                "type": "rigid_heddle",
+                "width_inches": 16,
+                "heddle_dent": 8,
+                "heddle_count": 1
+            },
+            "project": {
+                "finished_width": 12,
+                "finished_length": 70,
+                "warp_ends": 96,
+                "epi": 8,
+                "ppi": 10
+            },
+            "warp": {
+                "pattern": [
+                    {"color": "#001f3f", "threads": 1},
+                    {"color": "#f5f5f5", "threads": 1}
+                ],
+                "pattern_repeat": 2,
+                "total_ends": 96,
+                "threading": "alternating"
+            },
+            "weft": {
+                "primary_color": "#7f8c8d",
+                "yarn_weight": "worsted",
+                "shots_per_inch": 10
+            },
+            "weaving_sections": [
+                {
+                    "name": "header",
+                    "length_inches": 10,
+                    "technique": "plain_weave",
+                    "instructions": [
+                        {"row": 1, "heddle": "up", "weft": "#7f8c8d"},
+                        {"row": 2, "heddle": "down", "weft": "#7f8c8d"}
+                    ],
+                    "repeat": true
+                },
+                {
+                    "name": "decorative_pickup",
+                    "length_inches": 6,
+                    "technique": "pickup_pattern",
+                    "pickup_sequence": [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 37, 39, 41, 43, 45, 47],
+                    "pickup_notes": "every odd slot",
+                    "instructions": [
+                        {"row": 1, "heddle": "up", "pickup": null, "weft": "#7f8c8d"},
+                        {"row": 2, "heddle": "down", "pickup": "forward", "weft": "#7f8c8d"},
+                        {"row": 3, "heddle": "up", "pickup": null, "weft": "#7f8c8d"},
+                        {"row": 4, "heddle": "down", "pickup": "back", "weft": "#7f8c8d"},
+                        {"row": 5, "heddle": "up", "pickup": null, "weft": "#7f8c8d"},
+                        {"row": 6, "heddle": "down", "pickup": "forward", "weft": "#7f8c8d"},
+                        {"row": 7, "heddle": "up", "pickup": null, "weft": "#7f8c8d"},
+                        {"row": 8, "heddle": "down", "pickup": "back", "weft": "#7f8c8d"}
+                    ],
+                    "repeat": true
+                },
+                {
+                    "name": "footer",
+                    "length_inches": 54,
+                    "technique": "plain_weave",
+                    "instructions": [
+                        {"row": 1, "heddle": "up", "weft": "#7f8c8d"},
+                        {"row": 2, "heddle": "down", "weft": "#7f8c8d"}
+                    ],
+                    "repeat": true
+                }
+            ],
+            "finishing": {
+                "method": "hemstitch",
+                "fringe_length": 4
+            }
+        };
+
+        // State Management
+        let currentPattern = JSON.parse(JSON.stringify(samplePattern));
+        let hasUnsavedChanges = false;
+        let renderDebounceTimer = null;
+
+        // Tab Switching
+        function switchTab(event, tabName) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            event.target.classList.add('active');
+        }
+
+        // Pattern Change Handler (with auto-render debounce)
+        function onPatternChange() {
+            hasUnsavedChanges = true;
+
+            // Update quick facts
+            updateQuickFacts();
+
+            // Validate
+            const result = validator.validate(currentPattern);
+            updateValidationDisplay(result);
+
+            // Debounced auto-render (500ms)
+            clearTimeout(renderDebounceTimer);
+            renderDebounceTimer = setTimeout(() => {
+                renderer.renderPattern(currentPattern);
+            }, 500);
+        }
+
+        // Input Handlers
+        function updatePatternName(value) {
+            currentPattern.metadata.name = value;
+            hasUnsavedChanges = true;
+        }
+
+        function updateLoomWidth(value) {
+            currentPattern.loom_specs.width_inches = parseInt(value);
+            validateFabricWidth();
+            onPatternChange();
+        }
+
+        function updateHeddleDent(value) {
+            currentPattern.loom_specs.heddle_dent = parseFloat(value);
+            currentPattern.project.epi = parseFloat(value);
+            recalculateWarpEnds();
+            onPatternChange();
+        }
+
+        function updateFabricWidth(value) {
+            currentPattern.project.finished_width = parseFloat(value);
+            recalculateWarpEnds();
+            validateFabricWidth();
+            onPatternChange();
+        }
+
+        function validateFabricWidth() {
+            const feedback = document.getElementById('widthFeedback');
+            const input = document.getElementById('fabricWidth');
+            const width = currentPattern.project.finished_width;
+            const loomWidth = currentPattern.loom_specs.width_inches;
+
+            if (width >= loomWidth - 1) {
+                feedback.className = 'error-message';
+                feedback.textContent = `Too wide for your ${loomWidth}" loom! Maximum: ${loomWidth - 2}" (need margins)`;
+                input.classList.add('input-error');
+                input.classList.remove('input-valid');
+            } else {
+                feedback.className = 'success-message';
+                feedback.textContent = `✓ Will fit on your ${loomWidth}" loom`;
+                input.classList.add('input-valid');
+                input.classList.remove('input-error');
+            }
+        }
+
+        function updateFabricLength(value) {
+            currentPattern.project.finished_length = parseFloat(value);
+            onPatternChange();
+        }
+
+        function updateFinishingMethod(value) {
+            currentPattern.finishing.method = value;
+            onPatternChange();
+        }
+
+        function updateFringeLength(value) {
+            currentPattern.finishing.fringe_length = parseFloat(value);
+            onPatternChange();
+        }
+
+        function recalculateWarpEnds() {
+            const width = currentPattern.project.finished_width;
+            const epi = currentPattern.project.epi;
+            const totalEnds = Math.round(width * epi);
+
+            currentPattern.warp.total_ends = totalEnds;
+            currentPattern.project.warp_ends = totalEnds;
+
+            // Update displays
+            document.getElementById('calcWarpEnds').textContent = totalEnds;
+            document.getElementById('calcEPI').textContent = epi;
+
+            // Update warp preview
+            updateWarpPreview();
+        }
+
+        function updateWarpPatternType(type) {
+            if (type === 'solid') {
+                currentPattern.warp.pattern = [currentPattern.warp.pattern[0]];
+                currentPattern.warp.pattern_repeat = 1;
+                // Hide second color picker
+                document.getElementById('warpColorControls').children[1].style.display = 'none';
+            } else {
+                // Alternating - ensure 2 colors
+                if (currentPattern.warp.pattern.length < 2) {
+                    currentPattern.warp.pattern.push({"color": "#f5f5f5", "threads": 1});
+                }
+                currentPattern.warp.pattern_repeat = 2;
+                document.getElementById('warpColorControls').children[1].style.display = 'flex';
+            }
+            updateWarpPreview();
+            onPatternChange();
+        }
+
+        function updateWarpColor(index, color) {
+            currentPattern.warp.pattern[index].color = color;
+            updateWarpPreview();
+            onPatternChange();
+        }
+
+        function updateWarpColorName(index, name) {
+            // Store in metadata for reference (not in schema but useful)
+            hasUnsavedChanges = true;
+        }
+
+        function updateWarpThreads(index, threads) {
+            currentPattern.warp.pattern[index].threads = parseInt(threads);
+            currentPattern.warp.pattern_repeat = currentPattern.warp.pattern.reduce((sum, p) => sum + p.threads, 0);
+            updateWarpPreview();
+            onPatternChange();
+        }
+
+        function updateWeftColor(color) {
+            currentPattern.weft.primary_color = color;
+            // Update all section instructions with new weft color
+            currentPattern.weaving_sections.forEach(section => {
+                section.instructions.forEach(inst => {
+                    inst.weft = color;
+                });
+            });
+            onPatternChange();
+        }
+
+        function updateWeftColorName(name) {
+            hasUnsavedChanges = true;
+        }
+
+        function updateYarnWeight(weight) {
+            currentPattern.weft.yarn_weight = weight;
+            hasUnsavedChanges = true;
+        }
+
+        function updatePPI(value) {
+            currentPattern.project.ppi = parseInt(value);
+            currentPattern.weft.shots_per_inch = parseInt(value);
+            onPatternChange();
+        }
+
+        function updateSectionName(index, name) {
+            currentPattern.weaving_sections[index].name = name;
+            hasUnsavedChanges = true;
+        }
+
+        function updateSectionLength(index, length) {
+            currentPattern.weaving_sections[index].length_inches = parseFloat(length);
+            updateTotalLength();
+            onPatternChange();
+        }
+
+        // Helper Functions
+        function updateQuickFacts() {
+            const p = currentPattern;
+            document.getElementById('infoSize').textContent = `${p.project.finished_width}" × ${p.project.finished_length}"`;
+            document.getElementById('infoLoom').textContent = `${p.loom_specs.width_inches}" with ${p.loom_specs.heddle_dent}-dent heddle`;
+            document.getElementById('infoEnds').textContent = `${p.warp.total_ends} @ ${p.project.epi} EPI`;
+
+            const totalRows = p.weaving_sections.reduce((sum, s) => sum + Math.ceil(s.length_inches * p.project.ppi), 0);
+            document.getElementById('infoRows').textContent = `~${totalRows} @ ${p.project.ppi} PPI`;
+        }
+
+        function updateWarpPreview() {
+            const preview = document.getElementById('warpPreview');
+            const pattern = currentPattern.warp.pattern;
+            const totalEnds = currentPattern.warp.total_ends;
+
+            preview.innerHTML = '';
+
+            // Generate preview (show first 96 threads max)
+            const showThreads = Math.min(totalEnds, 96);
+            for (let i = 0; i < showThreads; i++) {
+                const patternIndex = i % pattern.length;
+                const thread = pattern[patternIndex];
+
+                const div = document.createElement('div');
+                div.className = 'warp-preview-thread';
+                div.style.backgroundColor = thread.color;
+                preview.appendChild(div);
+            }
+
+            document.getElementById('warpPreviewText').textContent = `${totalEnds} threads total`;
+        }
+
+        function updateTotalLength() {
+            const total = currentPattern.weaving_sections.reduce((sum, s) => sum + s.length_inches, 0);
+            currentPattern.project.finished_length = total;
+            document.getElementById('totalLength').textContent = total;
+            document.getElementById('fabricLength').value = total;
+        }
+
+        function populateSectionsList() {
+            const container = document.getElementById('sectionsList');
+            container.innerHTML = '';
+
+            currentPattern.weaving_sections.forEach((section, index) => {
+                const rows = Math.ceil(section.length_inches * currentPattern.project.ppi);
+
+                const card = document.createElement('div');
+                card.className = 'section-card';
+                card.innerHTML = `
+                    <div class="section-card-header">
+                        <input type="text" class="section-name" value="${section.name}"
+                               onchange="updateSectionName(${index}, this.value)">
+                        <span class="section-technique">${formatTechnique(section.technique)}</span>
+                    </div>
+                    <div class="section-card-body">
+                        <div class="form-group">
+                            <label class="form-label">Length (inches)</label>
+                            <input type="number" class="form-input" value="${section.length_inches}"
+                                   min="1" step="0.5" onchange="updateSectionLength(${index}, this.value)">
+                        </div>
+                        <div class="helper-text">Approximately ${rows} rows @ ${currentPattern.project.ppi} PPI</div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function formatTechnique(tech) {
+            const names = {
+                'plain_weave': 'Plain Weave',
+                'pickup_pattern': 'Pickup Pattern',
+                'color_and_weave': 'Color & Weave',
+                'leno_lace': 'Leno Lace'
+            };
+            return names[tech] || tech;
+        }
+
+        function updateValidationDisplay(result) {
+            const container = document.getElementById('validationResults');
+
+            if (result.valid) {
+                container.className = 'validation-results valid';
+                container.innerHTML = '<h4>✓ Pattern Ready to Weave</h4><p>All constraints satisfied.</p>';
+            } else {
+                container.className = 'validation-results invalid';
+                let html = '<h4>✗ Issues Found</h4><ul>';
+                result.errors.forEach(error => {
+                    html += `<li>${error}</li>`;
+                });
+                html += '</ul>';
+                container.innerHTML = html;
+            }
+        }
+
+        // Save/Load/Export
+        function savePattern() {
+            const name = currentPattern.metadata.name;
+            const key = `weave_pattern_${Date.now()}`;
+
+            localStorage.setItem(key, JSON.stringify(currentPattern));
+
+            // Save to recent patterns list
+            let recent = JSON.parse(localStorage.getItem('recent_patterns') || '[]');
+            recent.unshift({ key, name, date: new Date().toISOString() });
+            recent = recent.slice(0, 5); // Keep only 5 most recent
+            localStorage.setItem('recent_patterns', JSON.stringify(recent));
+
+            hasUnsavedChanges = false;
+            alert(`Pattern "${name}" saved!`);
+        }
+
+        function loadPattern() {
+            const recent = JSON.parse(localStorage.getItem('recent_patterns') || '[]');
+
+            if (recent.length === 0) {
+                alert('No saved patterns found. Save a pattern first!');
+                return;
+            }
+
+            // Show selection dialog
+            const selection = prompt(
+                'Select pattern:\n' +
+                recent.map((p, i) => `${i + 1}. ${p.name} (${new Date(p.date).toLocaleDateString()})`).join('\n')
+            );
+
+            if (selection) {
+                const index = parseInt(selection) - 1;
+                if (index >= 0 && index < recent.length) {
+                    const key = recent[index].key;
+                    const saved = localStorage.getItem(key);
+                    if (saved) {
+                        currentPattern = JSON.parse(saved);
+                        populateAllFields();
+                        hasUnsavedChanges = false;
+                        alert('Pattern loaded!');
+                    }
+                }
+            }
+        }
+
+        function exportJSON() {
+            const json = JSON.stringify(currentPattern, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${currentPattern.metadata.name.replace(/\s/g, '_')}.json`;
+            a.click();
+
+            URL.revokeObjectURL(url);
+            alert('Pattern exported!');
+        }
+
+        function populateAllFields() {
+            // Populate all form fields from currentPattern
+            document.getElementById('patternName').value = currentPattern.metadata.name;
+            document.getElementById('loomWidth').value = currentPattern.loom_specs.width_inches;
+            document.getElementById('heddleDent').value = currentPattern.loom_specs.heddle_dent;
+            document.getElementById('fabricWidth').value = currentPattern.project.finished_width;
+            document.getElementById('fabricLength').value = currentPattern.project.finished_length;
+            document.getElementById('finishingMethod').value = currentPattern.finishing.method;
+            document.getElementById('fringeLength').value = currentPattern.finishing.fringe_length;
+
+            // Colors
+            document.getElementById('warpColor0').value = currentPattern.warp.pattern[0].color;
+            if (currentPattern.warp.pattern.length > 1) {
+                document.getElementById('warpColor1').value = currentPattern.warp.pattern[1].color;
+            }
+            document.getElementById('weftColor').value = currentPattern.weft.primary_color;
+            document.getElementById('yarnWeight').value = currentPattern.weft.yarn_weight;
+            document.getElementById('ppi').value = currentPattern.project.ppi;
+
+            // Update all displays
+            updateQuickFacts();
+            updateWarpPreview();
+            populateSectionsList();
+            updateTotalLength();
+            validateFabricWidth();
+
+            const result = validator.validate(currentPattern);
+            updateValidationDisplay(result);
+            renderer.renderPattern(currentPattern);
+        }
+
+        // Pattern Validator Class
+        class RigidHeddleValidator {
+            constructor() {
+                this.constraints = {
+                    min_warp_ends: 10,
+                    max_warp_ends_per_inch: 15,
+                    min_warp_ends_per_inch: 2.5,
+                    standard_heddle_dents: [5, 7.5, 8, 10, 12, 12.5, 15],
+                    max_loom_width: 48,
+                    min_project_length: 6
+                };
+            }
+
+            validate(pattern) {
+                const errors = [];
+
+                // Validate warp calculations
+                const calculatedEnds = pattern.project.finished_width * pattern.project.epi;
+                if (Math.abs(calculatedEnds - pattern.warp.total_ends) > 0.1) {
+                    errors.push(
+                        `Warp end mismatch: ${calculatedEnds} calculated vs ${pattern.warp.total_ends} specified`
+                    );
+                }
+
+                // Validate EPI
+                if (!this.constraints.standard_heddle_dents.includes(pattern.project.epi)) {
+                    errors.push(
+                        `EPI ${pattern.project.epi} doesn't match standard heddle dents. Use: ${this.constraints.standard_heddle_dents.join(', ')}`
+                    );
+                }
+
+                // Validate width
+                if (pattern.project.finished_width >= pattern.loom_specs.width_inches - 1) {
+                    errors.push(
+                        `Fabric width ${pattern.project.finished_width}" too wide for ${pattern.loom_specs.width_inches}" loom (need 1" margins)`
+                    );
+                }
+
+                // Validate sections
+                pattern.weaving_sections.forEach(section => {
+                    const sectionErrors = this.validateSection(section, pattern);
+                    errors.push(...sectionErrors);
+                });
+
+                // Validate pickup sequences
+                errors.push(...this.validatePickupSequences(pattern));
+
+                return {
+                    valid: errors.length === 0,
+                    errors: errors
+                };
+            }
+
+            validateSection(section, pattern) {
+                const errors = [];
+
+                section.instructions.forEach((instruction, index) => {
+                    if (!['up', 'down', 'neutral'].includes(instruction.heddle)) {
+                        errors.push(
+                            `Section "${section.name}", row ${index + 1}: Invalid heddle position "${instruction.heddle}"`
+                        );
+                    }
+
+                    if (instruction.pickup && !['forward', 'back', 'on_edge', null].includes(instruction.pickup)) {
+                        errors.push(
+                            `Section "${section.name}", row ${index + 1}: Invalid pickup position "${instruction.pickup}"`
+                        );
+                    }
+                });
+
+                return errors;
+            }
+
+            validatePickupSequences(pattern) {
+                const errors = [];
+                const maxEnd = pattern.warp.total_ends;
+
+                pattern.weaving_sections.forEach(section => {
+                    if (section.pickup_sequence) {
+                        const invalidPicks = section.pickup_sequence.filter(pick => pick >= maxEnd);
+                        if (invalidPicks.length > 0) {
+                            errors.push(
+                                `Section "${section.name}": Pick-up sequence references threads beyond total warp ends (${maxEnd}): ${invalidPicks.join(', ')}`
+                            );
+                        }
+                    }
+                });
+
+                return errors;
+            }
+        }
+
+        // Canvas Renderer Class
+        class WeavingRenderer {
+            constructor(canvasId) {
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext('2d');
+                this.scale = 8;
+                this.offsetX = 0;
+                this.offsetY = 0;
+                this.pattern = null;
+                this.tooltip = document.getElementById('tooltip');
+
+                this.setupInteractivity();
+            }
+
+            renderPattern(pattern) {
+                this.pattern = pattern;
+                this.clear();
+
+                const warpThreads = this.expandWarpPattern(pattern.warp);
+                const totalRows = this.calculateTotalRows(pattern);
+
+                // Calculate canvas size
+                const width = warpThreads.length * this.scale;
+                const height = totalRows * this.scale;
+
+                // Render sections
+                let currentY = 0;
+                pattern.weaving_sections.forEach(section => {
+                    const sectionRows = Math.ceil(section.length_inches * pattern.project.ppi);
+                    this.renderSection(section, warpThreads, currentY, sectionRows);
+                    currentY += sectionRows;
+                });
+
+                // Update color legend
+                this.updateColorLegend(pattern);
+            }
+
+            expandWarpPattern(warp) {
+                const threads = [];
+                const pattern = warp.pattern;
+
+                for (let i = 0; i < warp.total_ends; i++) {
+                    const patternIndex = i % pattern.length;
+                    threads.push(pattern[patternIndex].color);
+                }
+
+                return threads;
+            }
+
+            calculateTotalRows(pattern) {
+                return pattern.weaving_sections.reduce((total, section) => {
+                    return total + Math.ceil(section.length_inches * pattern.project.ppi);
+                }, 0);
+            }
+
+            renderSection(section, warpThreads, startY, totalRows) {
+                const instructions = section.instructions;
+                const pickupSeq = section.pickup_sequence || [];
+
+                for (let row = 0; row < totalRows; row++) {
+                    const instruction = instructions[row % instructions.length];
+                    const y = startY + row;
+
+                    this.renderRow(y, instruction, warpThreads, pickupSeq);
+                }
+            }
+
+            renderRow(y, instruction, warpThreads, pickupSeq) {
+                const weftColor = instruction.weft;
+
+                warpThreads.forEach((warpColor, threadIndex) => {
+                    const x = threadIndex * this.scale;
+                    const screenY = y * this.scale + this.offsetY;
+                    const screenX = x + this.offsetX;
+
+                    // Determine which thread shows
+                    const isWarpVisible = this.calculateVisibility(
+                        threadIndex,
+                        instruction,
+                        pickupSeq
+                    );
+
+                    // Draw the square
+                    this.ctx.fillStyle = isWarpVisible ? warpColor : weftColor;
+                    this.ctx.fillRect(screenX, screenY, this.scale, this.scale);
+
+                    // Draw subtle grid
+                    this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+                    this.ctx.lineWidth = 0.5;
+                    this.ctx.strokeRect(screenX, screenY, this.scale, this.scale);
+                });
+            }
+
+            calculateVisibility(threadIndex, instruction, pickupSeq) {
+                // In rigid heddle: odd threads in holes, even in slots
+                const inHole = threadIndex % 2 === 1;
+                const isPickedUp = pickupSeq.includes(threadIndex);
+
+                if (instruction.heddle === 'up') {
+                    return inHole;
+                } else if (instruction.heddle === 'down') {
+                    if (instruction.pickup === 'forward' && isPickedUp) {
+                        return true;
+                    }
+                    return !inHole;
+                }
+
+                return false;
+            }
+
+            clear() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.ctx.fillStyle = '#f8f9fa';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+
+            zoom(factor) {
+                this.scale *= factor;
+                if (this.pattern) {
+                    this.renderPattern(this.pattern);
+                }
+            }
+
+            reset() {
+                this.scale = 8;
+                this.offsetX = 0;
+                this.offsetY = 0;
+                if (this.pattern) {
+                    this.renderPattern(this.pattern);
+                }
+            }
+
+            setupInteractivity() {
+                this.canvas.addEventListener('mousemove', (e) => {
+                    if (!this.pattern) return;
+
+                    const rect = this.canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+
+                    const threadNum = Math.floor((x - this.offsetX) / this.scale);
+                    const rowNum = Math.floor((y - this.offsetY) / this.scale);
+
+                    if (threadNum >= 0 && threadNum < this.pattern.warp.total_ends) {
+                        this.tooltip.style.display = 'block';
+                        this.tooltip.style.left = e.clientX + 15 + 'px';
+                        this.tooltip.style.top = e.clientY + 15 + 'px';
+                        this.tooltip.textContent = `Thread: ${threadNum + 1}, Row: ${rowNum + 1}`;
+                    } else {
+                        this.tooltip.style.display = 'none';
+                    }
+                });
+
+                this.canvas.addEventListener('mouseleave', () => {
+                    this.tooltip.style.display = 'none';
+                });
+            }
+
+            updateColorLegend(pattern) {
+                const legend = document.getElementById('colorLegend');
+                legend.innerHTML = '';
+
+                // Collect unique colors
+                const colors = new Set();
+                pattern.warp.pattern.forEach(p => colors.add(p.color));
+                colors.add(pattern.weft.primary_color);
+
+                const colorNames = {
+                    '#001f3f': 'Navy',
+                    '#f5f5f5': 'White',
+                    '#7f8c8d': 'Grey'
+                };
+
+                colors.forEach(color => {
+                    const item = document.createElement('div');
+                    item.className = 'legend-item';
+
+                    const colorBox = document.createElement('div');
+                    colorBox.className = 'legend-color';
+                    colorBox.style.backgroundColor = color;
+
+                    const label = document.createElement('span');
+                    label.textContent = colorNames[color] || color;
+
+                    item.appendChild(colorBox);
+                    item.appendChild(label);
+                    legend.appendChild(item);
+                });
+            }
+        }
+
+        // Initialize
+        const validator = new RigidHeddleValidator();
+        const renderer = new WeavingRenderer('weavingCanvas');
+
+        // Manual validation (for validate button if needed)
+        function validatePattern() {
+            const result = validator.validate(currentPattern);
+            updateValidationDisplay(result);
+        }
+
+        // Manual render (for render button)
+        function renderPattern() {
+            renderer.renderPattern(currentPattern);
+        }
+
+        // Zoom controls
+        function zoom(factor) {
+            renderer.zoom(factor);
+            const zoomPercent = Math.round(renderer.scale / 8 * 100);
+            document.getElementById('zoomLevel').textContent = zoomPercent + '%';
+        }
+
+        function resetView() {
+            renderer.reset();
+            document.getElementById('zoomLevel').textContent = '100%';
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            populateAllFields();
+        });
+    </script>
+</body>
+</html>
