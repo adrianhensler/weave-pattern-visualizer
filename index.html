@@ -149,7 +149,11 @@
         canvas {
             border: 1px solid #adb5bd;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            cursor: crosshair;
+            cursor: grab;
+        }
+
+        canvas:active {
+            cursor: grabbing;
         }
 
         .controls {
@@ -788,6 +792,9 @@
             <main class="main">
                 <div class="canvas-container">
                     <canvas id="weavingCanvas" width="800" height="600"></canvas>
+                    <div style="font-size: 0.85em; color: #6c757d; text-align: center; margin-top: -10px;">
+                        💡 Drag to pan • Scroll to zoom • Click buttons below for quick actions
+                    </div>
 
                     <div class="controls">
                         <button onclick="validatePattern()">Validate Pattern</button>
@@ -799,6 +806,7 @@
                             <button onclick="zoom(1.25)">+</button>
                         </div>
 
+                        <button onclick="fitToView()">Fit to View</button>
                         <button onclick="resetView()">Reset View</button>
                     </div>
                 </div>
@@ -1255,6 +1263,13 @@
             const result = validator.validate(currentPattern);
             updateValidationDisplay(result);
             renderer.renderPattern(currentPattern);
+
+            // Auto-fit the pattern to view
+            setTimeout(() => {
+                renderer.fitToView();
+                const zoomPercent = Math.round(renderer.scale / 8 * 100);
+                document.getElementById('zoomLevel').textContent = zoomPercent + '%';
+            }, 100);
         }
 
         // Pattern Validator Class
@@ -1481,30 +1496,128 @@
                 }
             }
 
+            fitToView() {
+                if (!this.pattern) return;
+
+                const warpThreads = this.expandWarpPattern(this.pattern.warp);
+                const totalRows = this.calculateTotalRows(this.pattern);
+
+                // Pattern dimensions at scale 1
+                const patternWidth = warpThreads.length;
+                const patternHeight = totalRows;
+
+                // Canvas dimensions
+                const canvasWidth = this.canvas.width;
+                const canvasHeight = this.canvas.height;
+
+                // Calculate scale to fit with 10% margin
+                const scaleX = (canvasWidth * 0.9) / patternWidth;
+                const scaleY = (canvasHeight * 0.9) / patternHeight;
+                this.scale = Math.min(scaleX, scaleY);
+
+                // Center the pattern
+                const scaledWidth = patternWidth * this.scale;
+                const scaledHeight = patternHeight * this.scale;
+                this.offsetX = (canvasWidth - scaledWidth) / 2;
+                this.offsetY = (canvasHeight - scaledHeight) / 2;
+
+                this.renderPattern(this.pattern);
+            }
+
             setupInteractivity() {
+                // Pan/drag state
+                this.isDragging = false;
+                this.dragStartX = 0;
+                this.dragStartY = 0;
+                this.dragOffsetX = 0;
+                this.dragOffsetY = 0;
+
+                // Mouse down - start dragging
+                this.canvas.addEventListener('mousedown', (e) => {
+                    this.isDragging = true;
+                    this.dragStartX = e.clientX;
+                    this.dragStartY = e.clientY;
+                    this.dragOffsetX = this.offsetX;
+                    this.dragOffsetY = this.offsetY;
+                    this.canvas.style.cursor = 'grabbing';
+                });
+
+                // Mouse move - drag or show tooltip
                 this.canvas.addEventListener('mousemove', (e) => {
                     if (!this.pattern) return;
 
-                    const rect = this.canvas.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-
-                    const threadNum = Math.floor((x - this.offsetX) / this.scale);
-                    const rowNum = Math.floor((y - this.offsetY) / this.scale);
-
-                    if (threadNum >= 0 && threadNum < this.pattern.warp.total_ends) {
-                        this.tooltip.style.display = 'block';
-                        this.tooltip.style.left = e.clientX + 15 + 'px';
-                        this.tooltip.style.top = e.clientY + 15 + 'px';
-                        this.tooltip.textContent = `Thread: ${threadNum + 1}, Row: ${rowNum + 1}`;
-                    } else {
+                    if (this.isDragging) {
+                        // Pan the view
+                        const dx = e.clientX - this.dragStartX;
+                        const dy = e.clientY - this.dragStartY;
+                        this.offsetX = this.dragOffsetX + dx;
+                        this.offsetY = this.dragOffsetY + dy;
+                        this.renderPattern(this.pattern);
                         this.tooltip.style.display = 'none';
+                    } else {
+                        // Show tooltip
+                        const rect = this.canvas.getBoundingClientRect();
+                        const x = e.clientX - rect.left;
+                        const y = e.clientY - rect.top;
+
+                        const threadNum = Math.floor((x - this.offsetX) / this.scale);
+                        const rowNum = Math.floor((y - this.offsetY) / this.scale);
+
+                        if (threadNum >= 0 && threadNum < this.pattern.warp.total_ends) {
+                            this.tooltip.style.display = 'block';
+                            this.tooltip.style.left = e.clientX + 15 + 'px';
+                            this.tooltip.style.top = e.clientY + 15 + 'px';
+                            this.tooltip.textContent = `Thread: ${threadNum + 1}, Row: ${rowNum + 1}`;
+                        } else {
+                            this.tooltip.style.display = 'none';
+                        }
+
+                        // Update cursor
+                        this.canvas.style.cursor = 'grab';
                     }
                 });
 
+                // Mouse up - stop dragging
+                const stopDragging = () => {
+                    this.isDragging = false;
+                    this.canvas.style.cursor = 'grab';
+                };
+
+                this.canvas.addEventListener('mouseup', stopDragging);
                 this.canvas.addEventListener('mouseleave', () => {
+                    stopDragging();
                     this.tooltip.style.display = 'none';
                 });
+
+                // Mouse wheel - zoom at cursor position
+                this.canvas.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+
+                    const rect = this.canvas.getBoundingClientRect();
+                    const mouseX = e.clientX - rect.left;
+                    const mouseY = e.clientY - rect.top;
+
+                    // Calculate point in pattern coordinates before zoom
+                    const patternX = (mouseX - this.offsetX) / this.scale;
+                    const patternY = (mouseY - this.offsetY) / this.scale;
+
+                    // Zoom
+                    const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+                    this.scale *= zoomFactor;
+                    this.scale = Math.max(2, Math.min(this.scale, 50)); // Limit zoom range
+
+                    // Adjust offset to keep point under cursor
+                    this.offsetX = mouseX - patternX * this.scale;
+                    this.offsetY = mouseY - patternY * this.scale;
+
+                    if (this.pattern) {
+                        this.renderPattern(this.pattern);
+                    }
+
+                    // Update zoom level display
+                    const zoomPercent = Math.round(this.scale / 8 * 100);
+                    document.getElementById('zoomLevel').textContent = zoomPercent + '%';
+                }, { passive: false });
             }
 
             updateColorLegend(pattern) {
@@ -1555,9 +1668,15 @@
             renderer.renderPattern(currentPattern);
         }
 
-        // Zoom controls
+        // Zoom and view controls
         function zoom(factor) {
             renderer.zoom(factor);
+            const zoomPercent = Math.round(renderer.scale / 8 * 100);
+            document.getElementById('zoomLevel').textContent = zoomPercent + '%';
+        }
+
+        function fitToView() {
+            renderer.fitToView();
             const zoomPercent = Math.round(renderer.scale / 8 * 100);
             document.getElementById('zoomLevel').textContent = zoomPercent + '%';
         }
