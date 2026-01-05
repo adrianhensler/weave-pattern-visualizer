@@ -2,7 +2,235 @@
  * Main Application Logic - Rigid Heddle Pattern Visualizer
  */
 
-// Sample Pattern Data
+// Preset Pattern Templates
+const presetTemplates = {
+    "simple-scarf": {
+        "metadata": {
+            "name": "Simple Scarf",
+            "author": "Template",
+            "created": "2026-01-04",
+            "description": "Basic plain weave scarf - perfect for beginners"
+        },
+        "loom_specs": {
+            "type": "rigid_heddle",
+            "width_inches": 20,
+            "heddle_dent": 10,
+            "heddle_count": 1
+        },
+        "project": {
+            "finished_width": 8,
+            "finished_length": 60,
+            "warp_ends": 80,
+            "epi": 10,
+            "ppi": 10
+        },
+        "warp": {
+            "pattern": [
+                {"color": "#8b4513", "threads": 1}
+            ],
+            "pattern_repeat": 1,
+            "total_ends": 80,
+            "threading": "solid"
+        },
+        "weft": {
+            "primary_color": "#8b4513",
+            "yarn_weight": "worsted",
+            "shots_per_inch": 10
+        },
+        "weaving_sections": [
+            {
+                "name": "Main Body",
+                "length_inches": 60,
+                "technique": "plain_weave",
+                "instructions": [
+                    {"row": 1, "heddle": "up", "weft": "#8b4513"},
+                    {"row": 2, "heddle": "down", "weft": "#8b4513"}
+                ],
+                "repeat": true
+            }
+        ],
+        "finishing": {
+            "method": "twisted_fringe",
+            "fringe_length": 6
+        }
+    },
+    "striped-scarf": {
+        "metadata": {
+            "name": "Striped Scarf",
+            "author": "Template",
+            "created": "2026-01-04",
+            "description": "Colorful striped scarf with alternating warp colors"
+        },
+        "loom_specs": {
+            "type": "rigid_heddle",
+            "width_inches": 20,
+            "heddle_dent": 10,
+            "heddle_count": 1
+        },
+        "project": {
+            "finished_width": 8,
+            "finished_length": 65,
+            "warp_ends": 80,
+            "epi": 10,
+            "ppi": 10
+        },
+        "warp": {
+            "pattern": [
+                {"color": "#e74c3c", "threads": 4},
+                {"color": "#3498db", "threads": 4},
+                {"color": "#f39c12", "threads": 4}
+            ],
+            "pattern_repeat": 12,
+            "total_ends": 80,
+            "threading": "striped"
+        },
+        "weft": {
+            "primary_color": "#ecf0f1",
+            "yarn_weight": "worsted",
+            "shots_per_inch": 10
+        },
+        "weaving_sections": [
+            {
+                "name": "Main Body",
+                "length_inches": 65,
+                "technique": "plain_weave",
+                "instructions": [
+                    {"row": 1, "heddle": "up", "weft": "#ecf0f1"},
+                    {"row": 2, "heddle": "down", "weft": "#ecf0f1"}
+                ],
+                "repeat": true
+            }
+        ],
+        "finishing": {
+            "method": "twisted_fringe",
+            "fringe_length": 6
+        }
+    },
+    "kitchen-towel": {
+        "metadata": {
+            "name": "Kitchen Towel",
+            "author": "Template",
+            "created": "2026-01-04",
+            "description": "Practical kitchen towel in cotton"
+        },
+        "loom_specs": {
+            "type": "rigid_heddle",
+            "width_inches": 24,
+            "heddle_dent": 12,
+            "heddle_count": 1
+        },
+        "project": {
+            "finished_width": 16,
+            "finished_length": 26,
+            "warp_ends": 192,
+            "epi": 12,
+            "ppi": 12
+        },
+        "warp": {
+            "pattern": [
+                {"color": "#ffffff", "threads": 1},
+                {"color": "#2c3e50", "threads": 1}
+            ],
+            "pattern_repeat": 2,
+            "total_ends": 192,
+            "threading": "alternating"
+        },
+        "weft": {
+            "primary_color": "#ffffff",
+            "yarn_weight": "sport",
+            "shots_per_inch": 12
+        },
+        "weaving_sections": [
+            {
+                "name": "Towel Body",
+                "length_inches": 26,
+                "technique": "plain_weave",
+                "instructions": [
+                    {"row": 1, "heddle": "up", "weft": "#ffffff"},
+                    {"row": 2, "heddle": "down", "weft": "#ffffff"}
+                ],
+                "repeat": true
+            }
+        ],
+        "finishing": {
+            "method": "sewn_hem",
+            "fringe_length": 0
+        }
+    },
+    "table-runner": {
+        "metadata": {
+            "name": "Table Runner",
+            "author": "Template",
+            "created": "2026-01-04",
+            "description": "Elegant table runner with decorative borders"
+        },
+        "loom_specs": {
+            "type": "rigid_heddle",
+            "width_inches": 20,
+            "heddle_dent": 10,
+            "heddle_count": 1
+        },
+        "project": {
+            "finished_width": 14,
+            "finished_length": 50,
+            "warp_ends": 140,
+            "epi": 10,
+            "ppi": 10
+        },
+        "warp": {
+            "pattern": [
+                {"color": "#2c3e50", "threads": 1},
+                {"color": "#ecf0f1", "threads": 1}
+            ],
+            "pattern_repeat": 2,
+            "total_ends": 140,
+            "threading": "alternating"
+        },
+        "weft": {
+            "primary_color": "#95a5a6",
+            "yarn_weight": "dk",
+            "shots_per_inch": 10
+        },
+        "weaving_sections": [
+            {
+                "name": "Border 1",
+                "length_inches": 5,
+                "technique": "plain_weave",
+                "instructions": [
+                    {"row": 1, "heddle": "up", "weft": "#2c3e50"},
+                    {"row": 2, "heddle": "down", "weft": "#2c3e50"}
+                ],
+                "repeat": true
+            },
+            {
+                "name": "Main Body",
+                "length_inches": 40,
+                "technique": "plain_weave",
+                "instructions": [
+                    {"row": 1, "heddle": "up", "weft": "#95a5a6"},
+                    {"row": 2, "heddle": "down", "weft": "#95a5a6"}
+                ],
+                "repeat": true
+            },
+            {
+                "name": "Border 2",
+                "length_inches": 5,
+                "technique": "plain_weave",
+                "instructions": [
+                    {"row": 1, "heddle": "up", "weft": "#2c3e50"},
+                    {"row": 2, "heddle": "down", "weft": "#2c3e50"}
+                ],
+                "repeat": true
+            }
+        ],
+        "finishing": {
+            "method": "hemstitch",
+            "fringe_length": 4
+        }
+    }
+};
+
+// Sample Pattern Data (Navy & White Scarf - Demo Pattern)
 const samplePattern = {
     "metadata": {
         "name": "Navy & White Scarf",
@@ -482,6 +710,31 @@ function loadPattern() {
                 hasUnsavedChanges = false;
                 alert('Pattern loaded!');
             }
+        }
+    }
+}
+
+function loadTemplate() {
+    const templates = [
+        { key: 'simple-scarf', name: 'Simple Scarf', desc: 'Basic plain weave (beginner)' },
+        { key: 'striped-scarf', name: 'Striped Scarf', desc: 'Colorful stripes' },
+        { key: 'kitchen-towel', name: 'Kitchen Towel', desc: 'Practical towel' },
+        { key: 'table-runner', name: 'Table Runner', desc: 'Elegant runner with borders' }
+    ];
+
+    const selection = prompt(
+        'Select a template to start from:\n' +
+        templates.map((t, i) => `${i + 1}. ${t.name} - ${t.desc}`).join('\n')
+    );
+
+    if (selection) {
+        const index = parseInt(selection) - 1;
+        if (index >= 0 && index < templates.length) {
+            const templateKey = templates[index].key;
+            currentPattern = JSON.parse(JSON.stringify(presetTemplates[templateKey]));
+            populateAllFields();
+            hasUnsavedChanges = true;
+            alert(`Template "${templates[index].name}" loaded! Customize it and save your own version.`);
         }
     }
 }
