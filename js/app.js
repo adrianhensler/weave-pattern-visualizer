@@ -310,6 +310,30 @@ function deleteSection(index) {
     }
 }
 
+function moveSectionUp(index) {
+    if (index === 0) return; // Already at top
+
+    // Swap with previous section
+    const temp = currentPattern.weaving_sections[index];
+    currentPattern.weaving_sections[index] = currentPattern.weaving_sections[index - 1];
+    currentPattern.weaving_sections[index - 1] = temp;
+
+    populateSectionsList();
+    onPatternChange();
+}
+
+function moveSectionDown(index) {
+    if (index === currentPattern.weaving_sections.length - 1) return; // Already at bottom
+
+    // Swap with next section
+    const temp = currentPattern.weaving_sections[index];
+    currentPattern.weaving_sections[index] = currentPattern.weaving_sections[index + 1];
+    currentPattern.weaving_sections[index + 1] = temp;
+
+    populateSectionsList();
+    onPatternChange();
+}
+
 // Helper Functions
 function updateQuickFacts() {
     const p = currentPattern;
@@ -356,11 +380,19 @@ function populateSectionsList() {
 
     currentPattern.weaving_sections.forEach((section, index) => {
         const rows = Math.ceil(section.length_inches * currentPattern.project.ppi);
+        const isFirst = index === 0;
+        const isLast = index === currentPattern.weaving_sections.length - 1;
 
         const card = document.createElement('div');
         card.className = 'section-card';
         card.innerHTML = `
             <div class="section-card-header">
+                <div class="section-reorder-controls">
+                    <button class="reorder-btn" onclick="moveSectionUp(${index})"
+                            ${isFirst ? 'disabled' : ''} title="Move up">↑</button>
+                    <button class="reorder-btn" onclick="moveSectionDown(${index})"
+                            ${isLast ? 'disabled' : ''} title="Move down">↓</button>
+                </div>
                 <input type="text" class="section-name" value="${section.name}"
                        onchange="updateSectionName(${index}, this.value)">
                 <div class="section-header-right">

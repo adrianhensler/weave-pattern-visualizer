@@ -402,6 +402,38 @@ button:active {
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid #dee2e6;
+    gap: 10px;
+}
+
+.section-reorder-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.reorder-btn {
+    background: white;
+    color: #667eea;
+    border: 1px solid #667eea;
+    padding: 2px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: bold;
+    line-height: 1;
+    transition: all 0.2s;
+}
+
+.reorder-btn:hover:not(:disabled) {
+    background: #667eea;
+    color: white;
+    transform: none;
+    box-shadow: none;
+}
+
+.reorder-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
 }
 
 .section-header-right {
