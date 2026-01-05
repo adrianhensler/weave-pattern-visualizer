@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rigid Heddle Weaving Pattern Visualizer</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -17,7 +18,8 @@
                 <button onclick="loadTemplate()">Templates</button>
                 <button onclick="loadPattern()">Load</button>
                 <button onclick="savePattern()">Save</button>
-                <button onclick="exportJSON()">Export</button>
+                <button onclick="showYarnCalculator()">Yarn Calculator</button>
+                <button onclick="showExportOptions()">Export</button>
                 <a href="about.html" style="padding: 8px 16px; font-size: 0.9em; background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); color: white; text-decoration: none; border-radius: 6px; display: inline-block;">About</a>
             </div>
         </header>
@@ -272,6 +274,19 @@
     </div>
 
     <div class="tooltip" id="tooltip"></div>
+
+    <!-- Yarn Calculator Modal -->
+    <div id="yarnCalculatorModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Yarn Requirements & Shopping List</h2>
+                <button class="modal-close" onclick="closeYarnCalculator()">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="yarnCalculatorResults"></div>
+            </div>
+        </div>
+    </div>
 
     <!-- JavaScript Modules -->
     <script src="js/validator.js"></script>

@@ -230,6 +230,20 @@ const presetTemplates = {
     }
 };
 
+// Yarn Weight Standards and Calculation Constants
+const YARN_WEIGHTS = {
+    'lace': { ypp: 550, typical_ball: '50g' },
+    'fingering': { ypp: 425, typical_ball: '50g' },
+    'sport': { ypp: 350, typical_ball: '50g' },
+    'dk': { ypp: 275, typical_ball: '50g' },
+    'worsted': { ypp: 200, typical_ball: '100g' },
+    'aran': { ypp: 175, typical_ball: '100g' },
+    'bulky': { ypp: 125, typical_ball: '100g' }
+};
+
+const WARP_WASTE_FACTOR = 1.15; // 15% for loom waste, tie-on, sampling
+const WEFT_WASTE_FACTOR = 1.10; // 10% for take-up, selvage
+
 // Sample Pattern Data (Navy & White Scarf - Demo Pattern)
 const samplePattern = {
     "metadata": {
@@ -818,4 +832,304 @@ function fitToView() {
 function resetView() {
     renderer.reset();
     document.getElementById('zoomLevel').textContent = '100%';
+}
+
+// Yarn Calculator Functions
+function calculateYarnRequirements() {
+    const pattern = currentPattern;
+    const results = {
+        warp_colors: [],
+        weft: {},
+        total_warp_yards: 0,
+        total_weft_yards: 0
+    };
+
+    // Calculate warp yardage per color
+    const warpLength = pattern.project.finished_length +
+                       pattern.finishing.fringe_length * 2 +
+                       36; // Add 36" for loom waste/tie-on
+
+    pattern.warp.pattern.forEach(colorEntry => {
+        const threadsPerRepeat = colorEntry.threads;
+        const totalRepeats = Math.ceil(pattern.warp.total_ends / pattern.warp.pattern_repeat);
+        const totalThreads = threadsPerRepeat * totalRepeats;
+
+        // Convert to yards (length is in inches)
+        const yardsPerThread = warpLength / 36;
+        const totalYards = yardsPerThread * totalThreads * WARP_WASTE_FACTOR;
+
+        results.warp_colors.push({
+            color: colorEntry.color,
+            threads: totalThreads,
+            yards: Math.ceil(totalYards),
+            yards_raw: totalYards
+        });
+
+        results.total_warp_yards += totalYards;
+    });
+
+    // Calculate weft yardage
+    const totalRows = pattern.weaving_sections.reduce(
+        (sum, s) => sum + Math.ceil(s.length_inches * pattern.project.ppi),
+        0
+    );
+    const weftPerRow = pattern.project.finished_width / 36; // Convert to yards
+    const totalWeftYards = totalRows * weftPerRow * WEFT_WASTE_FACTOR;
+
+    results.weft = {
+        color: pattern.weft.primary_color,
+        weight: pattern.weft.yarn_weight,
+        yards: Math.ceil(totalWeftYards),
+        yards_raw: totalWeftYards
+    };
+    results.total_weft_yards = totalWeftYards;
+
+    return results;
+}
+
+function generateShoppingList(yarnRequirements) {
+    const pattern = currentPattern;
+    const yarnWeight = pattern.weft.yarn_weight;
+    const yardsPerBall = YARN_WEIGHTS[yarnWeight]?.ypp || 200;
+    const typicalBall = YARN_WEIGHTS[yarnWeight]?.typical_ball || '100g';
+
+    const shoppingList = [];
+
+    // Warp colors
+    yarnRequirements.warp_colors.forEach(warpColor => {
+        const ballsNeeded = Math.ceil(warpColor.yards / (yardsPerBall / 2)); // Assuming 50g balls for warp
+        shoppingList.push({
+            type: 'Warp',
+            color: warpColor.color,
+            yards_needed: warpColor.yards,
+            balls_needed: ballsNeeded,
+            ball_size: '50g',
+            yarn_weight: yarnWeight
+        });
+    });
+
+    // Weft
+    const weftBallsNeeded = Math.ceil(yarnRequirements.weft.yards / yardsPerBall);
+    shoppingList.push({
+        type: 'Weft',
+        color: yarnRequirements.weft.color,
+        yards_needed: yarnRequirements.weft.yards,
+        balls_needed: weftBallsNeeded,
+        ball_size: typicalBall,
+        yarn_weight: yarnWeight
+    });
+
+    return shoppingList;
+}
+
+function showYarnCalculator() {
+    const requirements = calculateYarnRequirements();
+    const shoppingList = generateShoppingList(requirements);
+
+    let html = '<h3>Yarn Requirements</h3>';
+
+    // Warp section
+    html += '<div class="yarn-section"><h4>Warp Colors</h4><table class="yarn-table">';
+    html += '<tr><th>Color</th><th>Threads</th><th>Yards Needed</th></tr>';
+    requirements.warp_colors.forEach(warp => {
+        html += `<tr>
+            <td><span class="color-swatch" style="background:${warp.color}"></span> ${warp.color}</td>
+            <td>${warp.threads}</td>
+            <td>${warp.yards} yards</td>
+        </tr>`;
+    });
+    html += `<tr class="total-row"><td colspan="2"><strong>Total Warp:</strong></td>
+             <td><strong>${Math.ceil(requirements.total_warp_yards)} yards</strong></td></tr>`;
+    html += '</table></div>';
+
+    // Weft section
+    html += '<div class="yarn-section"><h4>Weft</h4><table class="yarn-table">';
+    html += `<tr>
+        <td><span class="color-swatch" style="background:${requirements.weft.color}"></span> ${requirements.weft.color}</td>
+        <td>${requirements.weft.weight}</td>
+        <td>${requirements.weft.yards} yards</td>
+    </tr>`;
+    html += '</table></div>';
+
+    // Shopping list
+    html += '<h3 style="margin-top: 30px;">Shopping List</h3>';
+    html += '<table class="yarn-table shopping-list">';
+    html += '<tr><th>Type</th><th>Color</th><th>Balls/Skeins</th><th>Size</th></tr>';
+    shoppingList.forEach(item => {
+        html += `<tr>
+            <td>${item.type}</td>
+            <td><span class="color-swatch" style="background:${item.color}"></span></td>
+            <td>${item.balls_needed}</td>
+            <td>${item.ball_size} ${item.yarn_weight}</td>
+        </tr>`;
+    });
+    html += '</table>';
+
+    html += '<p class="yarn-note"><em>Note: Calculations include 15% warp waste and 10% weft waste. ' +
+            'Actual requirements may vary based on weaving technique and tension.</em></p>';
+
+    document.getElementById('yarnCalculatorResults').innerHTML = html;
+    document.getElementById('yarnCalculatorModal').classList.remove('hidden');
+}
+
+function closeYarnCalculator() {
+    document.getElementById('yarnCalculatorModal').classList.add('hidden');
+}
+
+// PDF Export Function
+function exportPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const pattern = currentPattern;
+
+    // Page margins
+    const margin = 15;
+    let y = margin;
+    const lineHeight = 7;
+
+    // Title
+    doc.setFontSize(18);
+    doc.setFont(undefined, 'bold');
+    doc.text(pattern.metadata.name, margin, y);
+    y += 10;
+
+    // Metadata
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text(`Author: ${pattern.metadata.author || 'Unknown'}`, margin, y);
+    y += 5;
+    doc.text(`Created: ${pattern.metadata.created || new Date().toISOString().split('T')[0]}`, margin, y);
+    y += 5;
+    if (pattern.metadata.description) {
+        doc.text(`Description: ${pattern.metadata.description}`, margin, y);
+        y += 5;
+    }
+    y += 5;
+
+    // Section: Loom Specifications
+    doc.setFont(undefined, 'bold');
+    doc.setFontSize(12);
+    doc.text('Loom Specifications', margin, y);
+    y += lineHeight;
+
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(10);
+    doc.text(`Loom Width: ${pattern.loom_specs.width_inches}"`, margin + 5, y);
+    y += 5;
+    doc.text(`Heddle Dent: ${pattern.loom_specs.heddle_dent} dents per inch`, margin + 5, y);
+    y += 10;
+
+    // Section: Project Dimensions
+    doc.setFont(undefined, 'bold');
+    doc.setFontSize(12);
+    doc.text('Project Dimensions', margin, y);
+    y += lineHeight;
+
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(10);
+    doc.text(`Finished Width: ${pattern.project.finished_width}"`, margin + 5, y);
+    y += 5;
+    doc.text(`Finished Length: ${pattern.project.finished_length}"`, margin + 5, y);
+    y += 5;
+    doc.text(`Warp Ends: ${pattern.warp.total_ends} @ ${pattern.project.epi} EPI`, margin + 5, y);
+    y += 5;
+    doc.text(`Weft: ${pattern.project.ppi} PPI`, margin + 5, y);
+    y += 10;
+
+    // Section: Warp Colors
+    doc.setFont(undefined, 'bold');
+    doc.setFontSize(12);
+    doc.text('Warp Colors', margin, y);
+    y += lineHeight;
+
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(10);
+    pattern.warp.pattern.forEach((colorEntry, idx) => {
+        // Draw color square
+        const hexColor = colorEntry.color;
+        const r = parseInt(hexColor.slice(1, 3), 16);
+        const g = parseInt(hexColor.slice(3, 5), 16);
+        const b = parseInt(hexColor.slice(5, 7), 16);
+        doc.setFillColor(r, g, b);
+        doc.rect(margin + 5, y - 3, 4, 4, 'F');
+        doc.setTextColor(0, 0, 0);
+        doc.text(`Color ${idx + 1}: ${colorEntry.color} (${colorEntry.threads} thread${colorEntry.threads > 1 ? 's' : ''})`, margin + 12, y);
+        y += 5;
+    });
+    doc.text(`Threading: ${pattern.warp.threading}`, margin + 5, y);
+    y += 10;
+
+    // Section: Weft
+    doc.setFont(undefined, 'bold');
+    doc.setFontSize(12);
+    doc.text('Weft', margin, y);
+    y += lineHeight;
+
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(10);
+    const weftHex = pattern.weft.primary_color;
+    const wr = parseInt(weftHex.slice(1, 3), 16);
+    const wg = parseInt(weftHex.slice(3, 5), 16);
+    const wb = parseInt(weftHex.slice(5, 7), 16);
+    doc.setFillColor(wr, wg, wb);
+    doc.rect(margin + 5, y - 3, 4, 4, 'F');
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Color: ${pattern.weft.primary_color}`, margin + 12, y);
+    y += 5;
+    doc.text(`Yarn Weight: ${pattern.weft.yarn_weight}`, margin + 5, y);
+    y += 10;
+
+    // Section: Weaving Sections
+    doc.setFont(undefined, 'bold');
+    doc.setFontSize(12);
+    doc.text('Weaving Sections', margin, y);
+    y += lineHeight;
+
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(9);
+    pattern.weaving_sections.forEach((section, idx) => {
+        const rows = Math.ceil(section.length_inches * pattern.project.ppi);
+        doc.text(`${idx + 1}. ${section.name} - ${section.technique} - ${section.length_inches}" (~${rows} rows)`, margin + 5, y);
+        y += 5;
+
+        // Check if we need a new page
+        if (y > 270) {
+            doc.addPage();
+            y = margin;
+        }
+    });
+    y += 5;
+
+    // Section: Finishing
+    doc.setFont(undefined, 'bold');
+    doc.setFontSize(12);
+    doc.text('Finishing', margin, y);
+    y += lineHeight;
+
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(10);
+    doc.text(`Method: ${pattern.finishing.method}`, margin + 5, y);
+    y += 5;
+    if (pattern.finishing.fringe_length > 0) {
+        doc.text(`Fringe Length: ${pattern.finishing.fringe_length}"`, margin + 5, y);
+    }
+
+    // Footer
+    doc.setFontSize(8);
+    doc.setTextColor(128);
+    doc.text('Generated by Rigid Heddle Pattern Visualizer', margin, 285);
+    doc.text(`${new Date().toLocaleDateString()}`, 190, 285, { align: 'right' });
+
+    // Save PDF
+    const filename = `${pattern.metadata.name.replace(/\s+/g, '_')}_pattern.pdf`;
+    doc.save(filename);
+}
+
+function showExportOptions() {
+    const choice = confirm('Export as PDF?\n\nOK = PDF\nCancel = JSON');
+    if (choice) {
+        exportPDF();
+    } else {
+        exportJSON();
+    }
 }
