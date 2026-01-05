@@ -135,11 +135,17 @@ h1 {
     padding: 20px;
     display: flex;
     flex-direction: column;
-    align-items: center;
     gap: 15px;
 }
 
+.canvas-viewport {
+    overflow: auto;
+    max-height: calc(100vh - 260px);
+    width: 100%;
+}
+
 canvas {
+    display: block;
     border: 1px solid #adb5bd;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     cursor: grab;
