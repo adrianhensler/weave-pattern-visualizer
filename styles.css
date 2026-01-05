@@ -404,6 +404,12 @@ button:active {
     border-bottom: 1px solid #dee2e6;
 }
 
+.section-header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
 .section-card-header input.section-name {
     background: transparent;
     border: none;
@@ -435,6 +441,42 @@ button:active {
 
 .section-card-body {
     padding: 15px;
+}
+
+.delete-btn {
+    background: transparent;
+    color: #dc3545;
+    border: 1px solid #dc3545;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1.2em;
+    font-weight: bold;
+    line-height: 1;
+    transition: all 0.2s;
+}
+
+.delete-btn:hover {
+    background: #dc3545;
+    color: white;
+    transform: none;
+    box-shadow: none;
+}
+
+.add-section-btn {
+    width: 100%;
+    margin-top: 15px;
+    padding: 12px;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 1em;
+}
+
+.add-section-btn:hover {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
 }
 
 .total-length {

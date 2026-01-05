@@ -275,6 +275,41 @@ function updateSectionLength(index, length) {
     onPatternChange();
 }
 
+function addSection() {
+    // Create a new plain weave section
+    const newSection = {
+        "name": `Section ${currentPattern.weaving_sections.length + 1}`,
+        "length_inches": 10,
+        "technique": "plain_weave",
+        "instructions": [
+            {"row": 1, "heddle": "up", "weft": currentPattern.weft.primary_color},
+            {"row": 2, "heddle": "down", "weft": currentPattern.weft.primary_color}
+        ],
+        "repeat": true
+    };
+
+    currentPattern.weaving_sections.push(newSection);
+    populateSectionsList();
+    updateTotalLength();
+    onPatternChange();
+}
+
+function deleteSection(index) {
+    // Prevent deleting if only one section remains
+    if (currentPattern.weaving_sections.length <= 1) {
+        alert('Cannot delete the last section. At least one section is required.');
+        return;
+    }
+
+    const sectionName = currentPattern.weaving_sections[index].name;
+    if (confirm(`Delete section "${sectionName}"?`)) {
+        currentPattern.weaving_sections.splice(index, 1);
+        populateSectionsList();
+        updateTotalLength();
+        onPatternChange();
+    }
+}
+
 // Helper Functions
 function updateQuickFacts() {
     const p = currentPattern;
@@ -328,7 +363,10 @@ function populateSectionsList() {
             <div class="section-card-header">
                 <input type="text" class="section-name" value="${section.name}"
                        onchange="updateSectionName(${index}, this.value)">
-                <span class="section-technique">${formatTechnique(section.technique)}</span>
+                <div class="section-header-right">
+                    <span class="section-technique">${formatTechnique(section.technique)}</span>
+                    <button class="delete-btn" onclick="deleteSection(${index})" title="Delete section">×</button>
+                </div>
             </div>
             <div class="section-card-body">
                 <div class="form-group">
