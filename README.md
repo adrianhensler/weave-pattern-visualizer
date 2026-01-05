@@ -162,7 +162,6 @@ Areas for contribution:
 
 ## Acknowledgments
 
-- Inspired by traditional weaving software (Fiberworks, WeaveIt)
 - Built with guidance from experienced weavers
 - Designed for both technical and non-technical users
 
