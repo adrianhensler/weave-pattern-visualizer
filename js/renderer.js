@@ -236,7 +236,7 @@ class WeavingRenderer {
             this.tooltip.style.display = 'none';
         });
 
-        // Mouse wheel - zoom at cursor position
+        // Mouse wheel - pan or zoom at cursor position with modifier
         this.canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
 
@@ -244,26 +244,35 @@ class WeavingRenderer {
             const mouseX = e.clientX - rect.left;
             const mouseY = e.clientY - rect.top;
 
-            // Calculate point in pattern coordinates before zoom
-            const patternX = (mouseX - this.offsetX) / this.scale;
-            const patternY = (mouseY - this.offsetY) / this.scale;
+            if (e.ctrlKey || e.metaKey) {
+                // Calculate point in pattern coordinates before zoom
+                const patternX = (mouseX - this.offsetX) / this.scale;
+                const patternY = (mouseY - this.offsetY) / this.scale;
 
-            // Zoom
-            const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-            this.scale *= zoomFactor;
-            this.scale = Math.max(2, Math.min(this.scale, 50)); // Limit zoom range
+                // Zoom
+                const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+                this.scale *= zoomFactor;
+                this.scale = Math.max(2, Math.min(this.scale, 50)); // Limit zoom range
 
-            // Adjust offset to keep point under cursor
-            this.offsetX = mouseX - patternX * this.scale;
-            this.offsetY = mouseY - patternY * this.scale;
+                // Adjust offset to keep point under cursor
+                this.offsetX = mouseX - patternX * this.scale;
+                this.offsetY = mouseY - patternY * this.scale;
 
-            if (this.pattern) {
-                this.renderPattern(this.pattern);
+                if (this.pattern) {
+                    this.renderPattern(this.pattern);
+                }
+
+                // Update zoom level display
+                const zoomPercent = Math.round(this.scale / 8 * 100);
+                document.getElementById('zoomLevel').textContent = zoomPercent + '%';
+            } else {
+                this.offsetX -= e.deltaX;
+                this.offsetY -= e.deltaY;
+
+                if (this.pattern) {
+                    this.renderPattern(this.pattern);
+                }
             }
-
-            // Update zoom level display
-            const zoomPercent = Math.round(this.scale / 8 * 100);
-            document.getElementById('zoomLevel').textContent = zoomPercent + '%';
         }, { passive: false });
     }
 
