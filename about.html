@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - Rigid Heddle Pattern Visualizer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0a;
+            color: #d4d4d4;
+            line-height: 1.7;
+            font-size: 16px;
+            font-weight: 300;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 60px 30px;
+        }
+
+        header {
+            margin-bottom: 60px;
+            border-bottom: 1px solid rgba(232, 213, 181, 0.2);
+            padding-bottom: 30px;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3em;
+            font-weight: 400;
+            color: rgba(232, 213, 181, 0.6);
+            margin-bottom: 20px;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            color: #888;
+            font-weight: 300;
+        }
+
+        nav {
+            margin-top: 20px;
+        }
+
+        nav a {
+            color: #e8d5b5;
+            text-decoration: none;
+            font-size: 0.95em;
+            transition: opacity 0.2s;
+            margin-right: 20px;
+        }
+
+        nav a:hover {
+            opacity: 0.7;
+        }
+
+        h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2em;
+            font-weight: 600;
+            color: rgba(232, 213, 181, 0.7);
+            margin: 50px 0 25px 0;
+            letter-spacing: -0.01em;
+        }
+
+        h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4em;
+            font-weight: 600;
+            color: rgba(232, 213, 181, 0.6);
+            margin: 35px 0 15px 0;
+        }
+
+        p {
+            margin-bottom: 20px;
+            color: #c4c4c4;
+        }
+
+        a {
+            color: #e8d5b5;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(232, 213, 181, 0.3);
+            transition: border-color 0.2s;
+        }
+
+        a:hover {
+            border-bottom-color: #e8d5b5;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .toggle-section {
+            margin: 30px 0;
+            border: 1px solid rgba(232, 213, 181, 0.2);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .toggle-header {
+            background: rgba(232, 213, 181, 0.05);
+            padding: 20px 25px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .toggle-header:hover {
+            background: rgba(232, 213, 181, 0.08);
+        }
+
+        .toggle-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2em;
+            color: rgba(232, 213, 181, 0.8);
+            font-weight: 600;
+        }
+
+        .toggle-icon {
+            font-size: 1.5em;
+            color: rgba(232, 213, 181, 0.5);
+            transition: transform 0.3s;
+        }
+
+        .toggle-section.expanded .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .toggle-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .toggle-section.expanded .toggle-content {
+            max-height: 2000px;
+            transition: max-height 0.5s ease-in;
+        }
+
+        .toggle-inner {
+            padding: 25px;
+            border-top: 1px solid rgba(232, 213, 181, 0.1);
+        }
+
+        code {
+            background: rgba(232, 213, 181, 0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+            color: #e8d5b5;
+        }
+
+        ul {
+            margin: 15px 0 25px 25px;
+        }
+
+        li {
+            margin-bottom: 10px;
+            color: #c4c4c4;
+        }
+
+        .cta {
+            margin-top: 60px;
+            padding: 40px;
+            background: rgba(232, 213, 181, 0.05);
+            border: 1px solid rgba(232, 213, 181, 0.2);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background: rgba(232, 213, 181, 0.1);
+            border: 1px solid rgba(232, 213, 181, 0.3);
+            border-radius: 6px;
+            color: #e8d5b5;
+            text-decoration: none;
+            font-weight: 400;
+            transition: all 0.2s;
+        }
+
+        .button:hover {
+            background: rgba(232, 213, 181, 0.15);
+            border-color: #e8d5b5;
+            transform: translateY(-2px);
+        }
+
+        footer {
+            margin-top: 80px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(232, 213, 181, 0.2);
+            text-align: center;
+            font-size: 0.9em;
+            color: #888;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 40px 20px;
+            }
+
+            h1 {
+                font-size: 2.2em;
+            }
+
+            h2 {
+                font-size: 1.6em;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>About This Project</h1>
+            <p class="subtitle">Weaving patterns, AI collaboration, and the craft of building tools for makers</p>
+            <nav>
+                <a href="index.html">← Back to App</a>
+                <a href="https://github.com/adrianhensler/weave-pattern-visualizer">View on GitHub</a>
+            </nav>
+        </header>
+
+        <main>
+            <div class="section">
+                <h2>What This Is</h2>
+                <p>The Rigid Heddle Pattern Visualizer is an interactive web application for designing and visualizing weaving patterns. It helps weavers experiment with color combinations, validate their patterns against physical loom constraints, and export designs before warping their looms.</p>
+                <p>But it's also something else: a working example of what happens when you build an entire application through conversation with AI.</p>
+            </div>
+
+            <div class="section">
+                <h2>How It Was Built</h2>
+                <p>This tool was created through pair programming with Claude Code (Anthropic's AI assistant for software development). The entire codebase—from initial concept to canvas rendering engine to preset templates—emerged from iterative conversation.</p>
+                <p>I provided creative direction, domain knowledge about rigid heddle weaving, and design sensibility. Claude Code wrote the implementation, following strict constraints around weaving physics, handled the technical architecture, and built features incrementally with continuous testing.</p>
+                <p>The collaboration model is transparent: every commit message includes <code>Co-Authored-By: Claude Sonnet 4.5</code>. This isn't hidden—it's a feature worth documenting.</p>
+            </div>
+
+            <div class="section">
+                <h2>Why It Matters</h2>
+                <p>Traditional weaving software (Fiberworks, WeaveIt) is powerful but often intimidating for beginners. This tool started from a simple question: could we build something more approachable, that teaches weaving concepts through interaction rather than requiring upfront expertise?</p>
+                <p>The answer is yes—but only because the development process itself was conversational. Building with AI isn't about replacing human creativity; it's about having a technical partner who can implement your vision while you focus on user experience and craft knowledge.</p>
+            </div>
+
+            <div class="toggle-section">
+                <div class="toggle-header" onclick="toggleSection(this)">
+                    <span class="toggle-title">Technical Architecture</span>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="toggle-content">
+                    <div class="toggle-inner">
+                        <h3>Core Components</h3>
+                        <ul>
+                            <li><strong>Pattern Validator</strong> (<code>validator.js</code>) - Enforces rigid heddle physics: warp calculations, standard heddle dents, loom width constraints</li>
+                            <li><strong>Canvas Renderer</strong> (<code>renderer.js</code>) - Visualizes thread interlacement with zoom, pan, and drag controls</li>
+                            <li><strong>State Management</strong> (<code>app.js</code>) - Reactive pattern updates with 500ms debounced auto-rendering</li>
+                        </ul>
+
+                        <h3>Key Technical Decisions</h3>
+                        <p><strong>No build tools.</strong> Pure vanilla JavaScript, HTML5 Canvas, CSS. This keeps the project accessible—you can open <code>index.html</code> in any browser and it works. No npm, no webpack, no framework lock-in.</p>
+                        <p><strong>Rigid heddle physics.</strong> The renderer calculates thread visibility based on actual rigid heddle mechanics: odd threads in holes, even in slots, with proper pickup stick behavior. This isn't approximate—it's accurate to how the loom actually works.</p>
+                        <p><strong>Browser-based persistence.</strong> Patterns save to localStorage, not a server. This prioritizes privacy and offline capability over cloud sync.</p>
+
+                        <h3>Pattern Data Schema</h3>
+                        <p>Patterns are structured JSON with sections for metadata, loom specs, warp/weft configuration, weaving sections, and finishing. The schema supports plain weave, pickup patterns, color-and-weave effects, and leno lace—all validated against rigid heddle constraints.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="toggle-section">
+                <div class="toggle-header" onclick="toggleSection(this)">
+                    <span class="toggle-title">Development Timeline</span>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="toggle-content">
+                    <div class="toggle-inner">
+                        <h3>Initial Concept (Day 1)</h3>
+                        <p>Started from a ChatGPT conversation about AI-assisted weaving pattern generation. Realized the real value wasn't just generating patterns—it was validating and visualizing them against actual loom constraints.</p>
+
+                        <h3>Proof of Concept (Day 1)</h3>
+                        <p>Built single-file HTML application with validator and canvas renderer. Proved the core concept: accurate rigid heddle physics visualization with real-time validation.</p>
+
+                        <h3>MVP Features (Day 2)</h3>
+                        <p>Added tabbed editing interface, auto-render with debouncing, save/load functionality, and GitHub Pages deployment. Fixed critical branch naming issue (renamed "master" to "main").</p>
+
+                        <h3>Canvas Improvements (Day 2)</h3>
+                        <p>Implemented drag-to-pan, mouse wheel zoom at cursor position, and fit-to-view. Solved the problem of long patterns being impossible to navigate.</p>
+
+                        <h3>Phase 2 Features (Day 3)</h3>
+                        <ul>
+                            <li>Refactored single-file architecture into modular components</li>
+                            <li>Added section add/delete functionality</li>
+                            <li>Implemented section reordering with up/down arrows</li>
+                            <li>Created 4 preset templates (scarves, towel, table runner)</li>
+                        </ul>
+
+                        <p><strong>Total development time:</strong> ~3 days of iterative conversation</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="toggle-section">
+                <div class="toggle-header" onclick="toggleSection(this)">
+                    <span class="toggle-title">Philosophy & Approach</span>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="toggle-content">
+                    <div class="toggle-inner">
+                        <h3>Human Agency, AI Implementation</h3>
+                        <p>The critical insight: I never stopped being the designer and decision-maker. Claude Code was the implementation partner, not the creative director. Every feature, every UX choice, every technical constraint came from understanding what weavers actually need.</p>
+
+                        <h3>Iterative Refinement</h3>
+                        <p>We didn't get everything right on the first try. Canvas navigation was unusable until we added pan/zoom. The single-file architecture became unwieldy until we refactored into modules. Each problem was solved through conversation: "This doesn't work because..." followed by "Let's try this instead..."</p>
+
+                        <h3>Weaver-Friendly Design</h3>
+                        <p>The interface uses plain language ("threads per inch" not "EPI" in labels), provides helpful validation messages, and defaults to sensible values. This came from understanding the user: skilled weavers who may not be technical.</p>
+
+                        <h3>Open Source by Default</h3>
+                        <p>All code is public, MIT-licensed, and documented. The goal isn't proprietary advantage—it's advancing accessible weaving tools. If someone wants to fork this and build something better, perfect.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>What's Next</h2>
+                <p>Potential future enhancements include PDF export with printable instructions, yarn calculators, custom color palettes, and pattern sharing. But the immediate goal is simpler: get this into weavers' hands and learn what actually matters.</p>
+                <p>The best features emerge from real use, not speculation.</p>
+            </div>
+
+            <div class="cta">
+                <h3>Try It Yourself</h3>
+                <p>The application is live and fully functional. Open it, load a template, customize the colors, and see your pattern render in real-time.</p>
+                <div class="cta-buttons">
+                    <a href="index.html" class="button">Launch Application</a>
+                    <a href="https://github.com/adrianhensler/weave-pattern-visualizer" class="button">View Source Code</a>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Built by Adrian Hensler with Claude Code (Anthropic)</p>
+            <p>MIT License • 2026</p>
+        </footer>
+    </div>
+
+    <script>
+        function toggleSection(header) {
+            const section = header.parentElement;
+            section.classList.toggle('expanded');
+        }
+    </script>
+</body>
+</html>

@@ -2,6 +2,8 @@
 
 An interactive web application for designing, editing, and visualizing rigid heddle weaving patterns. Perfect for weavers who want to experiment with patterns before setting up their loom.
 
+**🌐 [Try it live!](https://adrianhensler.github.io/weave-pattern-visualizer/)** | [About this project](https://adrianhensler.github.io/weave-pattern-visualizer/about.html)
+
 ![Status](https://img.shields.io/badge/status-alpha-orange)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
@@ -163,6 +165,10 @@ Areas for contribution:
 - Inspired by traditional weaving software (Fiberworks, WeaveIt)
 - Built with guidance from experienced weavers
 - Designed for both technical and non-technical users
+
+## About This Project
+
+This tool was built through pair programming with Claude Code (Anthropic's AI assistant). For more about the development process, philosophy, and technical details, see the [About page](https://adrianhensler.github.io/weave-pattern-visualizer/about.html).
 
 ## Contact
 
