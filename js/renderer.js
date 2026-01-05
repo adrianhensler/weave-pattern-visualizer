@@ -16,7 +16,6 @@ class WeavingRenderer {
 
     renderPattern(pattern) {
         this.pattern = pattern;
-        this.clear();
 
         const warpThreads = this.expandWarpPattern(pattern.warp);
         const totalRows = this.calculateTotalRows(pattern);
@@ -24,6 +23,15 @@ class WeavingRenderer {
         // Calculate canvas size
         const width = warpThreads.length * this.scale;
         const height = totalRows * this.scale;
+        const pixelRatio = window.devicePixelRatio || 1;
+
+        this.canvas.style.width = `${width}px`;
+        this.canvas.style.height = `${height}px`;
+        this.canvas.width = Math.floor(width * pixelRatio);
+        this.canvas.height = Math.floor(height * pixelRatio);
+        this.ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+
+        this.clear();
 
         // Render sections
         let currentY = 0;
@@ -111,9 +119,12 @@ class WeavingRenderer {
     }
 
     clear() {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        const pixelRatio = window.devicePixelRatio || 1;
+        const width = this.canvas.width / pixelRatio;
+        const height = this.canvas.height / pixelRatio;
+        this.ctx.clearRect(0, 0, width, height);
         this.ctx.fillStyle = '#f8f9fa';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.fillRect(0, 0, width, height);
     }
 
     zoom(factor) {
@@ -143,8 +154,8 @@ class WeavingRenderer {
         const patternHeight = totalRows;
 
         // Canvas dimensions
-        const canvasWidth = this.canvas.width;
-        const canvasHeight = this.canvas.height;
+        const canvasWidth = this.canvas.clientWidth || this.canvas.width;
+        const canvasHeight = this.canvas.clientHeight || this.canvas.height;
 
         // Calculate scale to fit with 10% margin
         const scaleX = (canvasWidth * 0.9) / patternWidth;
