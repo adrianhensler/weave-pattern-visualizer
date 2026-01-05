@@ -107,26 +107,32 @@ See [CLAUDE.md](CLAUDE.md) for development guidelines and architecture details.
 
 ## Roadmap
 
-### Current (MVP)
-- ✅ Basic pattern editing
+### Completed (MVP + Phase 2)
+- ✅ Basic pattern editing with tabbed interface
 - ✅ Color selection and preview
-- ✅ Real-time validation
+- ✅ Real-time validation against rigid heddle constraints
 - ✅ Auto-render with debouncing
-- ✅ Save/load/export
+- ✅ Save/load/export functionality
+- ✅ Add/delete/reorder sections
+- ✅ Preset pattern templates (scarf, towel, runner)
+- ✅ Canvas pan/zoom/drag navigation
 
-### Planned (Phase 2)
-- Add/delete/reorder sections
-- Preset pattern templates
+### Planned (Phase 3)
 - Advanced pickup sequence editor
 - PDF export with printable instructions
 - Undo/redo functionality
-
-### Future (Phase 3)
 - Custom color palettes with names
 - Yarn calculator / shopping list
 - Pattern variations generator
+
+### Future Possibilities (Phase 4+)
 - User accounts + cloud storage
 - Community pattern library
+- **Multi-shaft loom support** (4-shaft, 8-shaft, etc.)
+  - Would require significant architecture changes
+  - Threading drafts and treadling patterns
+  - Different interlacement calculation
+  - Note: Author is not a weaver—this feature would require collaboration with experienced multi-shaft weavers to implement correctly
 
 ## AI Integration
 

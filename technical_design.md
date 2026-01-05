@@ -895,6 +895,21 @@ Benefits:
    - Or create rigid-heddle-specific format
    - Interoperability with existing software
 
+6. **Multi-Shaft Loom Support**: Can this be extended beyond rigid heddle?
+   - Current design is optimized for 2-shaft (rigid heddle) physics
+   - Complex geometric patterns require 4-shaft, 8-shaft, or more
+   - Would need significant architecture changes:
+     - Threading drafts (shaft assignment per warp thread)
+     - Treadling patterns (which shafts lift for each row)
+     - Different interlacement calculation engine
+     - Validation logic for each loom type
+   - **Limitation**: Author is not a weaver—implementing this correctly would require collaboration with experienced multi-shaft weavers to understand:
+     - Threading conventions and notation
+     - Tie-up patterns
+     - Treadling sequences
+     - How different shaft combinations create different weave structures
+   - This represents a potential Phase 4+ expansion if there's demand from the weaving community
+
 ---
 
 ## Next Steps for Implementation
